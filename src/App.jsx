@@ -1,15 +1,59 @@
-import { useState, useRef, useEffect, useCallback, use } from "react";
+import { useState, useRef, useEffect, useCallback, use, useTransition } from "react";
 import "./App.css";
 import { client } from "./lib/appwrite";
 import { AppwriteException } from "appwrite";
 import AppwriteSvg from "../public/appwrite.svg";
 import ReactSvg from "../public/react.svg";
 import Search from "./componenets/search";
+import Spinner from "./componenets/spinner";
 
+const API_BASE_URL = "https://api.themoviedb.org/3"
+const API_KEY = import.meta.env.VITE_TMDB_API_KEY
+const API_OPTIONS = {
+  method: 'GET',
+  headers: {
+    accept: 'application/json',
+    Authorization: `Bearer ${API_KEY}`
+  }
+}
 function App() {
 
   const [searchTerm, setSearchTerm] = useState('')
+  const [errorMessage, setErrorMessage] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
+  const [movieList, setMovieList] = useState([])
 
+
+
+
+  const fetchMovies = async() => {
+    setIsLoading(true)
+    setErrorMessage('')
+    try{
+      const endpoint = `https://api.themoviedb.org/3/discover/movie?include_adult=false&include_video=false&language=en-US&page=1&sort_by=popularity.desc`
+      const res = await fetch(endpoint, API_OPTIONS)
+      if(!res.ok){
+        throw new Error('failed to fetch movies')
+      }
+      const data = await res.json()
+      if(data.Response === 'False'){
+        setErrorMessage(data.Error || 'failed to fetch movies')
+        setMovieList([])
+        return
+      }
+      
+      setMovieList(data.results || [])
+      console.log(data.results)
+    }catch(e){
+      console.error(e)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+    useEffect(() => {
+      fetchMovies()
+    }, [])
 
   return (
     <main>
@@ -18,9 +62,29 @@ function App() {
         <header>
           <img src="./hero-img.svg" alt="" />
           <h1>Find <span className="text-gradient">Movies</span> You'll Enjoy Without The Hassle</h1>
+          <Search searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
+          <h1>{searchTerm}</h1>
         </header>
-        <Search searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
-        <h1>{searchTerm}</h1>
+        <div className="all-movies">
+          <h2>All Movies</h2>
+          {/* here the brackets after the ternary operat */}
+          {isLoading ? (
+            <Spinner />
+          ) : errorMessage ? (
+            <p className="text-red-500">{errorMessage}</p>
+          ) : (
+            <ul>
+              {/* the brackets after the map function are not curly braces and mean a direct return statement */}
+              {movieList.map((movie) => (
+                <p key={movie.id} className="text-white">{movie.title}</p>
+              )
+                
+              )}
+            </ul>
+          )
+        }
+
+        </div>
       </div>
     </main>
   )
