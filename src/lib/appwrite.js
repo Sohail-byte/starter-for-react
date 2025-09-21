@@ -7,4 +7,13 @@ const client = new Client()
 const account = new Account(client);
 const databases = new Databases(client);
 
-export { client, account, databases };
+export const updateSearchCount = async (searcTerm, movie) => {
+    //check if the movie already exists in the database 
+    try{
+        const result = 
+    }catch(e){
+        console.error(e)
+    }
+}
+
+

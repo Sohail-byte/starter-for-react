@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useCallback, use, useTransition } from "react";
 import "./App.css";
+import { useDebounce } from 'react-use'
 import { client } from "./lib/appwrite";
 import { AppwriteException } from "appwrite";
 import AppwriteSvg from "../public/appwrite.svg";
@@ -7,6 +8,7 @@ import ReactSvg from "../public/react.svg";
 import Search from "./componenets/search";
 import Spinner from "./componenets/spinner";
 import MovieCard from "./componenets/movieCard";
+
 
 const API_BASE_URL = "https://api.themoviedb.org/3"
 const API_KEY = import.meta.env.VITE_TMDB_API_KEY
@@ -23,15 +25,17 @@ function App() {
   const [errorMessage, setErrorMessage] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [movieList, setMovieList] = useState([])
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('')
 
+  useDebounce(() => setDebouncedSearchTerm(searchTerm), 500, [searchTerm])
 
-
-
-  const fetchMovies = async() => {
+  const fetchMovies = async(query = '') => {
     setIsLoading(true)
     setErrorMessage('')
     try{
-      const endpoint = `https://api.themoviedb.org/3/discover/movie?include_adult=false&include_video=false&language=en-US&page=1&sort_by=popularity.desc`
+      const endpoint = query
+      ? `${API_BASE_URL}/search/movie?query=${encodeURIComponent(query)}`
+      : `${API_BASE_URL}/discover/movie?sort_by=popularity.desc`
       const res = await fetch(endpoint, API_OPTIONS)
       if(!res.ok){
         throw new Error('failed to fetch movies')
@@ -44,7 +48,6 @@ function App() {
       }
       
       setMovieList(data.results || [])
-      console.log(data.results)
     }catch(e){
       console.error(e)
     } finally {
@@ -53,8 +56,8 @@ function App() {
   }
 
     useEffect(() => {
-      fetchMovies()
-    }, [])
+      fetchMovies(debouncedSearchTerm)
+    }, [debouncedSearchTerm])
 
   return (
     <main>
@@ -64,7 +67,6 @@ function App() {
           <img src="./hero-img.svg" alt="" />
           <h1>Find <span className="text-gradient">Movies</span> You'll Enjoy Without The Hassle</h1>
           <Search searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
-          <h1>{searchTerm}</h1>
         </header>
         <div className="all-movies">
           <h2>All Movies</h2>
