@@ -6,6 +6,7 @@ import AppwriteSvg from "../public/appwrite.svg";
 import ReactSvg from "../public/react.svg";
 import Search from "./componenets/search";
 import Spinner from "./componenets/spinner";
+import MovieCard from "./componenets/movieCard";
 
 const API_BASE_URL = "https://api.themoviedb.org/3"
 const API_KEY = import.meta.env.VITE_TMDB_API_KEY
@@ -76,7 +77,7 @@ function App() {
             <ul>
               {/* the brackets after the map function are not curly braces and mean a direct return statement */}
               {movieList.map((movie) => (
-                <p key={movie.id} className="text-white">{movie.title}</p>
+                <MovieCard key={movie.id} movie={movie} />
               )
                 
               )}
