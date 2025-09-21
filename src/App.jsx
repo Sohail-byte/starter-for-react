@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback, use, useTransition } from "react";
 import "./App.css";
 import { useDebounce } from 'react-use'
-import { client } from "./lib/appwrite";
+import { updateSearchCount } from "./lib/appwrite.js";
 import { AppwriteException } from "appwrite";
 import AppwriteSvg from "../public/appwrite.svg";
 import ReactSvg from "../public/react.svg";
@@ -21,6 +21,9 @@ const API_OPTIONS = {
 }
 function App() {
 
+  
+
+
   const [searchTerm, setSearchTerm] = useState('')
   const [errorMessage, setErrorMessage] = useState('')
   const [isLoading, setIsLoading] = useState(false)
@@ -32,7 +35,9 @@ function App() {
   const fetchMovies = async(query = '') => {
     setIsLoading(true)
     setErrorMessage('')
+    
     try{
+      
       const endpoint = query
       ? `${API_BASE_URL}/search/movie?query=${encodeURIComponent(query)}`
       : `${API_BASE_URL}/discover/movie?sort_by=popularity.desc`
@@ -48,6 +53,9 @@ function App() {
       }
       
       setMovieList(data.results || [])
+      if(query && data.results.lenght > 0){
+        await updateSearchCount(query, data.results[0])
+      }
     }catch(e){
       console.error(e)
     } finally {
